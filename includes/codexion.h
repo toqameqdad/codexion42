@@ -10,7 +10,6 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-
 #ifndef CODEXION_H
 # define CODEXION_H
 
@@ -20,7 +19,7 @@
 # include <unistd.h>
 # include <sys/time.h>
 # include <string.h>
-
+# include "heap.h"
 
 typedef enum e_scheduler
 {
@@ -35,28 +34,26 @@ typedef enum e_state
 	STATE_REFACTORING
 }	t_state;
 
-
 typedef struct s_dongle
 {
 	int				id;
 	pthread_mutex_t	lock;
+	pthread_cond_t	cond;
 	int				in_use;
 	long			last_released_ms;
 }	t_dongle;
 
-
 typedef struct s_coder
 {
-	int				id;
-	pthread_t		thread;
-	t_dongle		*left_dongle;
-	t_dongle		*right_dongle;
-	int				compiles_done;
-	long			last_compile_start_ms; 
-	int				is_compiling;		
+	int					id;
+	pthread_t			thread;
+	t_dongle			*left_dongle;
+	t_dongle			*right_dongle;
+	pthread_mutex_t		state_lock;
+	int					compiles_done;
+	long				last_compile_start_ms;
 	struct s_simulation	*sim;
 }	t_coder;
-
 
 typedef struct s_simulation
 {
@@ -74,12 +71,16 @@ typedef struct s_simulation
 
 	pthread_mutex_t	print_lock;		
 	pthread_mutex_t	stop_lock;		
-	int				stop_flag;		
+	int				stop_flag;
+	int				finished_count;		
+
+	t_heap			wait_queue;
+	pthread_mutex_t	queue_lock;
+	pthread_cond_t	queue_cond;
 
 	long			start_time_ms;	
 	pthread_t		monitor_thread;
 }	t_simulation;
-
 
 long	get_current_time_ms(void);
 long	elapsed_ms(t_simulation *sim);
@@ -93,5 +94,27 @@ void	log_event(t_simulation *sim, int coder_id, const char *msg);
 
 int		simulation_should_stop(t_simulation *sim);
 void	simulation_request_stop(t_simulation *sim);
+void	simulation_mark_finished(t_simulation *sim);
+
+long	compute_priority(t_simulation *sim, t_coder *coder,
+			long request_time_ms);
+void	scheduler_wait_for_turn(t_simulation *sim, t_coder *coder,
+			long request_time_ms);
+
+void	ms_to_abs_timespec(long ms_from_now, struct timespec *ts);
+void	sleep_ms_interruptible(t_simulation *sim, long ms);
+
+int		dongle_acquire(t_simulation *sim, t_dongle *d);
+void	dongle_release(t_simulation *sim, t_dongle *d);
+int		acquire_both_dongles(t_simulation *sim, t_coder *coder);
+void	release_both_dongles(t_simulation *sim, t_coder *coder);
+
+long	coder_get_last_compile_start(t_coder *coder);
+void	coder_set_last_compile_start(t_coder *coder, long value);
+int		coder_get_compiles_done(t_coder *coder);
+void	coder_inc_compiles_done(t_coder *coder);
+void	*coder_routine(void *arg);
+
+void	*monitor_routine(void *arg);
 
 #endif

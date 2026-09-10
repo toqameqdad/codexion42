@@ -10,7 +10,12 @@ SRCS		= main.c \
 			  parsing.c \
 			  init.c \
 			  logging.c \
-			  utils_time.c
+			  utils_time.c \
+			  heap.c \
+			  scheduler.c \
+			  dongle.c \
+			  coder.c \
+			  monitor.c
 
 OBJS		= $(SRCS:%.c=$(SRCS_DIR)/%.o)
 

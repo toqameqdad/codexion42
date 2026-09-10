@@ -12,7 +12,7 @@
 
 #include "codexion.h"
 
-static int is_valid_positive_number(const char *s)
+static int	is_valid_positive_number(const char *s)
 {
 	int	i;
 
@@ -32,7 +32,7 @@ static int is_valid_positive_number(const char *s)
 	return (1);
 }
 
-static long str_to_long(const char *s)
+static long	str_to_long(const char *s)
 {
 	long	result;
 	int		i;
@@ -64,7 +64,12 @@ static int	parse_scheduler(const char *s, t_scheduler *out)
 	return (1);
 }
 
-int parse_args(int argc, char **argv, t_simulation *sim)
+/*
+** الترتيب المطلوب بالوسائط:
+** number_of_coders time_to_burnout time_to_compile time_to_debug
+** time_to_refactor number_of_compiles_required dongle_cooldown scheduler
+*/
+int	parse_args(int argc, char **argv, t_simulation *sim)
 {
 	int	i;
 
