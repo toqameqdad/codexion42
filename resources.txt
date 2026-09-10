@@ -1,0 +1,7 @@
+what is process and threads?:
+https://www.youtube.com/watch?v=OrM7nZcxXZU
+why threads?:
+https://www.youtube.com/watch?v=hN2Yrf4tqTY
+race condition :
+https://www.techtarget.com/it-infrastructure/definition/race-condition
+https://www.youtube.com/watch?v=XH_KVNGsKpA
