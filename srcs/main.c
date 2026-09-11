@@ -23,7 +23,11 @@ static int	start_threads(t_simulation *sim)
 	{
 		if (pthread_create(&sim->coders[i].thread, NULL,
 				coder_routine, &sim->coders[i]) != 0)
+		{
+			simulation_request_stop(sim);
 			return (1);
+		}
+		sim->created_coders++;
 		i++;
 	}
 	return (0);

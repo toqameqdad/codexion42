@@ -63,6 +63,7 @@ typedef struct s_simulation
 	long			time_to_debug;
 	long			time_to_refactor;
 	int				number_of_compiles_required;
+	int				created_coders;
 	long			dongle_cooldown;
 	t_scheduler		scheduler;
 

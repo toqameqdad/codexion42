@@ -17,7 +17,8 @@ long	compute_priority(t_simulation *sim, t_coder *coder,
 {
 	if (sim->scheduler == CX_SCHED_FIFO)
 		return (request_time_ms);
-	return (coder->last_compile_start_ms + sim->time_to_burnout);
+	return (coder_get_last_compile_start(coder)
+		+ sim->time_to_burnout);
 }
 
 void	scheduler_wait_for_turn(t_simulation *sim, t_coder *coder,

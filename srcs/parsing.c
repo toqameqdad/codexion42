@@ -64,11 +64,6 @@ static int	parse_scheduler(const char *s, t_scheduler *out)
 	return (1);
 }
 
-/*
-** الترتيب المطلوب بالوسائط:
-** number_of_coders time_to_burnout time_to_compile time_to_debug
-** time_to_refactor number_of_compiles_required dongle_cooldown scheduler
-*/
 int	parse_args(int argc, char **argv, t_simulation *sim)
 {
 	int	i;

@@ -19,7 +19,7 @@ static int	check_coder(t_simulation *sim, t_coder *coder)
 
 	now = get_current_time_ms();
 	last_start = coder_get_last_compile_start(coder);
-	if (now - last_start > sim->time_to_burnout)
+	if (now - last_start >= sim->time_to_burnout)
 	{
 		log_event(sim, coder->id, "burned out");
 		simulation_request_stop(sim);
