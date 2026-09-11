@@ -12,33 +12,6 @@
 
 #include "codexion.h"
 
-static void	destroy_dongles(t_simulation *sim, int count)
-{
-	int	i;
-
-	i = 0;
-	while (i < count)
-	{
-		pthread_mutex_destroy(&sim->dongles[i].lock);
-		pthread_cond_destroy(&sim->dongles[i].cond);
-		i++;
-	}
-	free(sim->dongles);
-}
-
-static void	destroy_coders(t_simulation *sim, int count)
-{
-	int	i;
-
-	i = 0;
-	while (i < count)
-	{
-		pthread_mutex_destroy(&sim->coders[i].state_lock);
-		i++;
-	}
-	free(sim->coders);
-}
-
 static int	init_dongles(t_simulation *sim)
 {
 	int	i;
@@ -54,13 +27,13 @@ static int	init_dongles(t_simulation *sim)
 		sim->dongles[i].last_released_ms = 0;
 		if (pthread_mutex_init(&sim->dongles[i].lock, NULL) != 0)
 		{
-			destroy_dongles(sim, i);
+			cleanup_dongles(sim, i);
 			return (1);
 		}
 		if (pthread_cond_init(&sim->dongles[i].cond, NULL) != 0)
 		{
 			pthread_mutex_destroy(&sim->dongles[i].lock);
-			destroy_dongles(sim, i);
+			cleanup_dongles(sim, i);
 			return (1);
 		}
 		i++;
@@ -88,7 +61,7 @@ static int	init_coders(t_simulation *sim)
 			% sim->number_of_coders];
 		if (pthread_mutex_init(&sim->coders[i].state_lock, NULL) != 0)
 		{
-			destroy_coders(sim, i);
+			cleanup_coders(sim, i);
 			return (1);
 		}
 		i++;
@@ -102,7 +75,7 @@ int	init_simulation(t_simulation *sim)
 		return (1);
 	if (init_coders(sim) != 0)
 	{
-		destroy_dongles(sim, sim->number_of_coders);
+		cleanup_dongles(sim, sim->number_of_coders);
 		return (1);
 	}
 	pthread_mutex_init(&sim->print_lock, NULL);
@@ -111,8 +84,8 @@ int	init_simulation(t_simulation *sim)
 	sim->finished_count = 0;
 	if (heap_init(&sim->wait_queue, sim->number_of_coders) != 0)
 	{
-		destroy_dongles(sim, sim->number_of_coders);
-		destroy_coders(sim, sim->number_of_coders);
+		cleanup_dongles(sim, sim->number_of_coders);
+		cleanup_coders(sim, sim->number_of_coders);
 		return (1);
 	}
 	pthread_mutex_init(&sim->queue_lock, NULL);
@@ -122,8 +95,8 @@ int	init_simulation(t_simulation *sim)
 
 void	destroy_simulation(t_simulation *sim)
 {
-	destroy_dongles(sim, sim->number_of_coders);
-	destroy_coders(sim, sim->number_of_coders);
+	cleanup_dongles(sim, sim->number_of_coders);
+	cleanup_coders(sim, sim->number_of_coders);
 	pthread_mutex_destroy(&sim->print_lock);
 	pthread_mutex_destroy(&sim->stop_lock);
 	heap_destroy(&sim->wait_queue);

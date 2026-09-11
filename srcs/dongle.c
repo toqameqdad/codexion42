@@ -12,13 +12,12 @@
 
 #include "codexion.h"
 
-int	dongle_acquire(t_simulation *sim, t_dongle *d)
+static int	wait_for_dongle(t_simulation *sim, t_dongle *d)
 {
 	long			now;
 	long			remaining;
 	struct timespec	ts;
 
-	pthread_mutex_lock(&d->lock);
 	while (1)
 	{
 		if (simulation_should_stop(sim))
@@ -29,16 +28,24 @@ int	dongle_acquire(t_simulation *sim, t_dongle *d)
 		now = get_current_time_ms();
 		if (!d->in_use && (d->last_released_ms == 0
 				|| now - d->last_released_ms >= sim->dongle_cooldown))
-			break ;
+			return (0);
 		if (d->in_use)
 			pthread_cond_wait(&d->cond, &d->lock);
 		else
 		{
-			remaining = sim->dongle_cooldown - (now - d->last_released_ms);
+			remaining = sim->dongle_cooldown
+				- (now - d->last_released_ms);
 			ms_to_abs_timespec(remaining, &ts);
 			pthread_cond_timedwait(&d->cond, &d->lock, &ts);
 		}
 	}
+}
+
+int	dongle_acquire(t_simulation *sim, t_dongle *d)
+{
+	pthread_mutex_lock(&d->lock);
+	if (wait_for_dongle(sim, d) != 0)
+		return (1);
 	d->in_use = 1;
 	pthread_mutex_unlock(&d->lock);
 	return (0);

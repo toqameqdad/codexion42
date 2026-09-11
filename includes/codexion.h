@@ -90,6 +90,9 @@ int		parse_args(int argc, char **argv, t_simulation *sim);
 int		init_simulation(t_simulation *sim);
 void	destroy_simulation(t_simulation *sim);
 
+void	cleanup_dongles(t_simulation *sim, int count);
+void	cleanup_coders(t_simulation *sim, int count);
+
 void	log_event(t_simulation *sim, int coder_id, const char *msg);
 
 int		simulation_should_stop(t_simulation *sim);

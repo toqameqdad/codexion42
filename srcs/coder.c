@@ -12,40 +12,6 @@
 
 #include "codexion.h"
 
-long	coder_get_last_compile_start(t_coder *coder)
-{
-	long	value;
-
-	pthread_mutex_lock(&coder->state_lock);
-	value = coder->last_compile_start_ms;
-	pthread_mutex_unlock(&coder->state_lock);
-	return (value);
-}
-
-void	coder_set_last_compile_start(t_coder *coder, long value)
-{
-	pthread_mutex_lock(&coder->state_lock);
-	coder->last_compile_start_ms = value;
-	pthread_mutex_unlock(&coder->state_lock);
-}
-
-int	coder_get_compiles_done(t_coder *coder)
-{
-	int	value;
-
-	pthread_mutex_lock(&coder->state_lock);
-	value = coder->compiles_done;
-	pthread_mutex_unlock(&coder->state_lock);
-	return (value);
-}
-
-void	coder_inc_compiles_done(t_coder *coder)
-{
-	pthread_mutex_lock(&coder->state_lock);
-	coder->compiles_done++;
-	pthread_mutex_unlock(&coder->state_lock);
-}
-
 static int	do_one_compile_round(t_simulation *sim, t_coder *coder)
 {
 	long	request_time;

@@ -7,15 +7,18 @@ SRCS_DIR	= srcs
 INC_DIR		= includes
 
 SRCS		= main.c \
-			  parsing.c \
-			  init.c \
-			  logging.c \
-			  utils_time.c \
-			  heap.c \
-			  scheduler.c \
-			  dongle.c \
-			  coder.c \
-			  monitor.c
+		  parsing.c \
+		  init.c \
+		  init_utils.c \
+		  logging.c \
+		  utils_time.c \
+		  heap.c \
+		  heap_utils.c \
+		  scheduler.c \
+		  dongle.c \
+		  coder.c \
+		  coder_utils.c \
+		  monitor.c
 
 OBJS		= $(SRCS:%.c=$(SRCS_DIR)/%.o)
 

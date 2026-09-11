@@ -12,12 +12,26 @@
 
 #include "codexion.h"
 
+static int	check_coder(t_simulation *sim, t_coder *coder)
+{
+	long	now;
+	long	last_start;
+
+	now = get_current_time_ms();
+	last_start = coder_get_last_compile_start(coder);
+	if (now - last_start > sim->time_to_burnout)
+	{
+		log_event(sim, coder->id, "burned out");
+		simulation_request_stop(sim);
+		return (1);
+	}
+	return (0);
+}
+
 void	*monitor_routine(void *arg)
 {
 	t_simulation	*sim;
 	int				i;
-	long			now;
-	long			last_start;
 
 	sim = (t_simulation *)arg;
 	while (!simulation_should_stop(sim))
@@ -27,14 +41,8 @@ void	*monitor_routine(void *arg)
 		{
 			if (simulation_should_stop(sim))
 				break ;
-			now = get_current_time_ms();
-			last_start = coder_get_last_compile_start(&sim->coders[i]);
-			if (now - last_start > sim->time_to_burnout)
-			{
-				log_event(sim, sim->coders[i].id, "burned out");
-				simulation_request_stop(sim);
+			if (check_coder(sim, &sim->coders[i]))
 				break ;
-			}
 			i++;
 		}
 		usleep(1000);

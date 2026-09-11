@@ -6,7 +6,7 @@
 /*   By: tmeqdad <toqa.meqdad@learner.42.tech>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/11 02:33:10 by tmeqdad           #+#    #+#             */
-/*   Updated: 2026/09/11 02:33:10 by tmeqdad          ###   ########.fr       */
+/*   Updated: 2026/09/11 17:30:00 by tmeqdad          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,8 +37,8 @@ int	heap_push(t_heap *heap, long priority, int coder_id)
 		return (1);
 	heap->nodes[heap->size].priority = priority;
 	heap->nodes[heap->size].coder_id = coder_id;
-	heap_sift_up(heap, heap->size);
 	heap->size++;
+	heap_sift_up(heap, heap->size - 1);
 	return (0);
 }
 
@@ -48,8 +48,11 @@ int	heap_pop(t_heap *heap, t_heap_node *out)
 		return (1);
 	*out = heap->nodes[0];
 	heap->size--;
-	heap->nodes[0] = heap->nodes[heap->size];
-	heap_sift_down(heap, 0);
+	if (heap->size > 0)
+	{
+		heap->nodes[0] = heap->nodes[heap->size];
+		heap_sift_down(heap, 0);
+	}
 	return (0);
 }
 
