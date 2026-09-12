@@ -25,11 +25,13 @@ void	scheduler_wait_for_turn(t_simulation *sim, t_coder *coder,
 		long request_time_ms)
 {
 	long		priority;
+	long		sequence;
 	t_heap_node	front;
 
 	priority = compute_priority(sim, coder, request_time_ms);
 	pthread_mutex_lock(&sim->queue_lock);
-	heap_push(&sim->wait_queue, priority, coder->id);
+	sequence = sim->request_sequence++;
+	heap_push(&sim->wait_queue, priority, coder->id, sequence);
 	heap_peek(&sim->wait_queue, &front);
 	while (front.coder_id != coder->id && !simulation_should_stop(sim))
 	{

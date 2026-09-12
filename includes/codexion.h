@@ -19,6 +19,7 @@
 # include <unistd.h>
 # include <sys/time.h>
 # include <string.h>
+# include <limits.h>
 # include "heap.h"
 
 typedef enum e_scheduler
@@ -64,7 +65,9 @@ typedef struct s_simulation
 	long			time_to_refactor;
 	int				number_of_compiles_required;
 	int				created_coders;
+	int				monitor_started;
 	long			dongle_cooldown;
+	long			request_sequence;
 	t_scheduler		scheduler;
 
 	t_dongle		*dongles;		

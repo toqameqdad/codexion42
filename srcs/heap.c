@@ -31,12 +31,14 @@ void	heap_destroy(t_heap *heap)
 	heap->capacity = 0;
 }
 
-int	heap_push(t_heap *heap, long priority, int coder_id)
+int	heap_push(t_heap *heap, long priority, int coder_id,
+		long sequence)
 {
 	if (heap->size >= heap->capacity)
 		return (1);
 	heap->nodes[heap->size].priority = priority;
 	heap->nodes[heap->size].coder_id = coder_id;
+	heap->nodes[heap->size].sequence = sequence;
 	heap->size++;
 	heap_sift_up(heap, heap->size - 1);
 	return (0);

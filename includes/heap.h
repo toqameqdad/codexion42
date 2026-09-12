@@ -17,6 +17,7 @@ typedef struct s_heap_node
 {
 	long	priority;
 	int		coder_id;
+	long	sequence;
 }	t_heap_node;
 
 typedef struct s_heap
@@ -28,7 +29,7 @@ typedef struct s_heap
 
 int		heap_init(t_heap *heap, int capacity);
 void	heap_destroy(t_heap *heap);
-int		heap_push(t_heap *heap, long priority, int coder_id);
+int		heap_push(t_heap *heap, long priority, int coder_id, long sequence);
 int		heap_pop(t_heap *heap, t_heap_node *out);
 int		heap_peek(t_heap *heap, t_heap_node *out);
 int		heap_is_empty(t_heap *heap);

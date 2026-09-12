@@ -32,21 +32,26 @@ static int	is_valid_positive_number(const char *s)
 	return (1);
 }
 
-static long	str_to_long(const char *s)
+static int	str_to_long(const char *s, long *result)
 {
-	long	result;
+	long	value;
 	int		i;
+	int		digit;
 
-	result = 0;
+	value = 0;
 	i = 0;
 	if (s[i] == '+')
 		i++;
 	while (s[i])
 	{
-		result = result * 10 + (s[i] - '0');
+		digit = s[i] - '0';
+		if (value > (LONG_MAX - digit) / 10)
+			return (1);
+		value = value * 10 + digit;
 		i++;
 	}
-	return (result);
+	*result = value;
+	return (0);
 }
 
 static int	parse_scheduler(const char *s, t_scheduler *out)
@@ -66,26 +71,31 @@ static int	parse_scheduler(const char *s, t_scheduler *out)
 
 int	parse_args(int argc, char **argv, t_simulation *sim)
 {
-	int	i;
+	long	values[7];
+	int		i;
 
 	if (argc != 9)
 		return (1);
-	i = 1;
-	while (i <= 7)
+	i = 0;
+	while (i < 7)
 	{
-		if (!is_valid_positive_number(argv[i]))
+		if (!is_valid_positive_number(argv[i + 1]))
+			return (1);
+		if (str_to_long(argv[i + 1], &values[i]) != 0)
 			return (1);
 		i++;
 	}
-	sim->number_of_coders = (int)str_to_long(argv[1]);
-	sim->time_to_burnout = str_to_long(argv[2]);
-	sim->time_to_compile = str_to_long(argv[3]);
-	sim->time_to_debug = str_to_long(argv[4]);
-	sim->time_to_refactor = str_to_long(argv[5]);
-	sim->number_of_compiles_required = (int)str_to_long(argv[6]);
-	sim->dongle_cooldown = str_to_long(argv[7]);
-	if (sim->number_of_coders < 1)
+	if (values[0] < 1 || values[0] > INT_MAX)
 		return (1);
+	if (values[5] > INT_MAX)
+		return (1);
+	sim->number_of_coders = (int)values[0];
+	sim->time_to_burnout = values[1];
+	sim->time_to_compile = values[2];
+	sim->time_to_debug = values[3];
+	sim->time_to_refactor = values[4];
+	sim->number_of_compiles_required = (int)values[5];
+	sim->dongle_cooldown = values[6];
 	if (parse_scheduler(argv[8], &sim->scheduler) != 0)
 		return (1);
 	return (0);
