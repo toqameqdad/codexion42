@@ -21,6 +21,8 @@ int	heap_node_is_less(t_heap_node a, t_heap_node b)
 {
 	if (a.priority != b.priority)
 		return (a.priority < b.priority);
+	if (a.sequence != b.sequence)
+		return (a.sequence < b.sequence);
 	return (a.coder_id < b.coder_id);
 }
 
