@@ -39,6 +39,12 @@ void	*coder_routine(void *arg)
 
 	coder = (t_coder *)arg;
 	sim = coder->sim;
+	if (sim->number_of_compiles_required == 0)
+	{
+		coder_set_finished(coder, 1);
+		simulation_mark_finished(sim);
+		return (NULL);
+	}
 	while (!simulation_should_stop(sim)
 		&& coder_get_compiles_done(coder) < sim->number_of_compiles_required)
 	{
@@ -46,6 +52,7 @@ void	*coder_routine(void *arg)
 			break ;
 		if (coder_get_compiles_done(coder) >= sim->number_of_compiles_required)
 		{
+			coder_set_finished(coder, 1);
 			simulation_mark_finished(sim);
 			break ;
 		}

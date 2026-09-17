@@ -53,6 +53,7 @@ static int	init_coders(t_simulation *sim)
 	{
 		sim->coders[i].id = i + 1;
 		sim->coders[i].compiles_done = 0;
+		sim->coders[i].finished = 0;
 		sim->coders[i].last_compile_start_ms = 0;
 		sim->coders[i].sim = sim;
 		sim->coders[i].right_dongle = &sim->dongles[i];
@@ -112,7 +113,9 @@ int	init_simulation(t_simulation *sim)
 	}
 	if (pthread_mutex_init(&sim->stop_lock, NULL) != 0)
 	{
-		cleanup_before_queue(sim);
+		pthread_mutex_destroy(&sim->print_lock);
+		cleanup_dongles(sim, sim->number_of_coders);
+		cleanup_coders(sim, sim->number_of_coders);
 		return (1);
 	}
 	sim->stop_flag = 0;

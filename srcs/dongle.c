@@ -67,12 +67,7 @@ int	acquire_both_dongles(t_simulation *sim, t_coder *coder)
 	t_dongle	*second;
 
 	if (coder->left_dongle == coder->right_dongle)
-	{
-		if (dongle_acquire(sim, coder->left_dongle) != 0)
-			return (1);
-		log_event(sim, coder->id, "has taken a dongle");
-		return (0);
-	}
+		return (1);
 	if (coder->left_dongle->id < coder->right_dongle->id)
 	{
 		first = coder->left_dongle;

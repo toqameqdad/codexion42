@@ -6,7 +6,7 @@
 /*   By: tmeqdad <toqa.meqdad@learner.42.tech>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/09/10 20:45:39 by tmeqdad           #+#    #+#             */
-/*   Updated: 2026/09/10 20:45:39 by tmeqdad          ###   ########.fr       */
+/*   Updated: 2026/09/17 16:35:00 by tmeqdad          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,6 +52,7 @@ typedef struct s_coder
 	t_dongle			*right_dongle;
 	pthread_mutex_t		state_lock;
 	int					compiles_done;
+	int					finished;
 	long				last_compile_start_ms;
 	struct s_simulation	*sim;
 }	t_coder;
@@ -69,59 +70,47 @@ typedef struct s_simulation
 	long			dongle_cooldown;
 	long			request_sequence;
 	t_scheduler		scheduler;
-
-	t_dongle		*dongles;		
-	t_coder			*coders;		
-
-	pthread_mutex_t	print_lock;		
-	pthread_mutex_t	stop_lock;		
+	t_dongle		*dongles;
+	t_coder			*coders;
+	pthread_mutex_t	print_lock;
+	pthread_mutex_t	stop_lock;
 	int				stop_flag;
-	int				finished_count;		
-
+	int				finished_count;
 	t_heap			wait_queue;
 	pthread_mutex_t	queue_lock;
 	pthread_cond_t	queue_cond;
-
-	long			start_time_ms;	
+	long			start_time_ms;
 	pthread_t		monitor_thread;
 }	t_simulation;
 
 long	get_current_time_ms(void);
 long	elapsed_ms(t_simulation *sim);
-
 int		parse_args(int argc, char **argv, t_simulation *sim);
-
 int		init_simulation(t_simulation *sim);
 void	destroy_simulation(t_simulation *sim);
-
 void	cleanup_dongles(t_simulation *sim, int count);
 void	cleanup_coders(t_simulation *sim, int count);
-
 void	log_event(t_simulation *sim, int coder_id, const char *msg);
-
 int		simulation_should_stop(t_simulation *sim);
 void	simulation_request_stop(t_simulation *sim);
 void	simulation_mark_finished(t_simulation *sim);
-
 long	compute_priority(t_simulation *sim, t_coder *coder,
 			long request_time_ms);
 void	scheduler_wait_for_turn(t_simulation *sim, t_coder *coder,
 			long request_time_ms);
-
 void	ms_to_abs_timespec(long ms_from_now, struct timespec *ts);
 void	sleep_ms_interruptible(t_simulation *sim, long ms);
-
 int		dongle_acquire(t_simulation *sim, t_dongle *d);
 void	dongle_release(t_simulation *sim, t_dongle *d);
 int		acquire_both_dongles(t_simulation *sim, t_coder *coder);
 void	release_both_dongles(t_simulation *sim, t_coder *coder);
-
 long	coder_get_last_compile_start(t_coder *coder);
 void	coder_set_last_compile_start(t_coder *coder, long value);
 int		coder_get_compiles_done(t_coder *coder);
 void	coder_inc_compiles_done(t_coder *coder);
+int		coder_get_finished(t_coder *coder);
+void	coder_set_finished(t_coder *coder, int value);
 void	*coder_routine(void *arg);
-
 void	*monitor_routine(void *arg);
 
 #endif

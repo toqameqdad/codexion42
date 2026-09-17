@@ -45,3 +45,20 @@ void	coder_inc_compiles_done(t_coder *coder)
 	coder->compiles_done++;
 	pthread_mutex_unlock(&coder->state_lock);
 }
+
+int	coder_get_finished(t_coder *coder)
+{
+	int	value;
+
+	pthread_mutex_lock(&coder->state_lock);
+	value = coder->finished;
+	pthread_mutex_unlock(&coder->state_lock);
+	return (value);
+}
+
+void	coder_set_finished(t_coder *coder, int value)
+{
+	pthread_mutex_lock(&coder->state_lock);
+	coder->finished = value;
+	pthread_mutex_unlock(&coder->state_lock);
+}

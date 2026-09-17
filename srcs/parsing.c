@@ -87,6 +87,9 @@ int	parse_args(int argc, char **argv, t_simulation *sim)
 	}
 	if (values[0] < 1 || values[0] > INT_MAX)
 		return (1);
+	if (values[1] == 0 || values[2] == 0 || values[3] == 0
+		|| values[4] == 0 || values[5] == 0)
+		return (1);
 	if (values[5] > INT_MAX)
 		return (1);
 	sim->number_of_coders = (int)values[0];

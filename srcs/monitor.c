@@ -17,6 +17,8 @@ static int	check_coder(t_simulation *sim, t_coder *coder)
 	long	now;
 	long	last_start;
 
+	if (coder_get_finished(coder))
+		return (0);
 	now = get_current_time_ms();
 	last_start = coder_get_last_compile_start(coder);
 	if (now - last_start >= sim->time_to_burnout)
