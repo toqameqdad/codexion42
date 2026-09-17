@@ -7,3 +7,4 @@ https://www.techtarget.com/it-infrastructure/definition/race-condition
 https://www.youtube.com/watch?v=XH_KVNGsKpA
 tester:
 https://github.com/Manoa12/Codexion42
+https://github.com/toqameqdad/codexion42/blob/main/edge_tests.sh
