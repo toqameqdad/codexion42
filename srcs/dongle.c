@@ -12,87 +12,48 @@
 
 #include "codexion.h"
 
-static int	wait_for_dongle(t_simulation *sim, t_dongle *d)
+static void	select_dongle_order(t_coder *coder, t_dongle **first,
+			t_dongle **second)
 {
-	long			now;
-	long			remaining;
-	struct timespec	ts;
-
-	while (1)
-	{
-		if (simulation_should_stop(sim))
-		{
-			pthread_mutex_unlock(&d->lock);
-			return (1);
-		}
-		now = get_current_time_ms();
-		if (!d->in_use && (d->last_released_ms == 0
-				|| now - d->last_released_ms >= sim->dongle_cooldown))
-			return (0);
-		if (d->in_use)
-			pthread_cond_wait(&d->cond, &d->lock);
-		else
-		{
-			remaining = sim->dongle_cooldown
-				- (now - d->last_released_ms);
-			ms_to_abs_timespec(remaining, &ts);
-			pthread_cond_timedwait(&d->cond, &d->lock, &ts);
-		}
-	}
-}
-
-int	dongle_acquire(t_simulation *sim, t_dongle *d)
-{
-	pthread_mutex_lock(&d->lock);
-	if (wait_for_dongle(sim, d) != 0)
-		return (1);
-	d->in_use = 1;
-	pthread_mutex_unlock(&d->lock);
-	return (0);
-}
-
-void	dongle_release(t_simulation *sim, t_dongle *d)
-{
-	(void)sim;
-	pthread_mutex_lock(&d->lock);
-	d->in_use = 0;
-	d->last_released_ms = get_current_time_ms();
-	pthread_cond_broadcast(&d->cond);
-	pthread_mutex_unlock(&d->lock);
-}
-
-int	acquire_both_dongles(t_simulation *sim, t_coder *coder)
-{
-	t_dongle	*first;
-	t_dongle	*second;
-
-	if (coder->left_dongle == coder->right_dongle)
-		return (1);
 	if (coder->left_dongle->id < coder->right_dongle->id)
 	{
-		first = coder->left_dongle;
-		second = coder->right_dongle;
+		*first = coder->left_dongle;
+		*second = coder->right_dongle;
 	}
 	else
 	{
-		first = coder->right_dongle;
-		second = coder->left_dongle;
+		*first = coder->right_dongle;
+		*second = coder->left_dongle;
 	}
-	if (dongle_acquire(sim, first) != 0)
-		return (1);
-	log_event(sim, coder->id, "has taken a dongle");
-	if (dongle_acquire(sim, second) != 0)
+}
+
+static void	mark_dongles_released(t_dongle *first, t_dongle *second,
+			long released_at)
+{
+	first->in_use = 0;
+	first->last_released_ms = released_at;
+	if (first != second)
 	{
-		dongle_release(sim, first);
-		return (1);
+		second->in_use = 0;
+		second->last_released_ms = released_at;
+		pthread_mutex_unlock(&second->lock);
 	}
-	log_event(sim, coder->id, "has taken a dongle");
-	return (0);
 }
 
 void	release_both_dongles(t_simulation *sim, t_coder *coder)
 {
-	dongle_release(sim, coder->left_dongle);
-	if (coder->right_dongle != coder->left_dongle)
-		dongle_release(sim, coder->right_dongle);
+	t_dongle	*first;
+	t_dongle	*second;
+	long		released_at;
+
+	select_dongle_order(coder, &first, &second);
+	pthread_mutex_lock(&sim->queue_lock);
+	pthread_mutex_lock(&first->lock);
+	if (first != second)
+		pthread_mutex_lock(&second->lock);
+	released_at = get_current_time_ms();
+	mark_dongles_released(first, second, released_at);
+	pthread_mutex_unlock(&first->lock);
+	pthread_cond_broadcast(&sim->queue_cond);
+	pthread_mutex_unlock(&sim->queue_lock);
 }

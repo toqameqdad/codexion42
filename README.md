@@ -149,7 +149,7 @@ The implementation uses a custom priority queue based on a heap rather than a st
 
 A deadlock can occur when several coders hold one dongle while waiting indefinitely for another dongle.
 
-The implementation avoids this situation by controlling dongle acquisition through the scheduler and synchronization mechanisms instead of allowing threads to independently hold resources without coordination.
+The implementation avoids this situation by letting the scheduler reserve both adjacent dongles atomically. Dongle mutexes are always locked in ascending ID order, so a circular lock dependency cannot be formed.
 
 The four Coffman conditions are:
 
@@ -158,7 +158,7 @@ The four Coffman conditions are:
 3. No preemption
 4. Circular wait
 
-The resource-management design breaks the conditions that would otherwise allow a circular wait to persist.
+The fixed lock order breaks the circular-wait condition, while atomic pair reservation prevents a coder from keeping only one dongle while waiting for the other.
 
 A coder only enters the compiling state after successfully obtaining both required dongles.
 
@@ -267,13 +267,7 @@ The condition is always checked while holding the associated mutex. This prevent
 
 ### Custom event implementation
 
-The project also uses a custom event mechanism to coordinate important simulation events between threads.
-
-Events are used to communicate state changes without relying on unsafe direct access to shared data.
-
-For example, when a coder changes state or when the simulation needs to stop, the event mechanism allows the relevant thread to notify the monitor or other synchronization logic.
-
-This provides a controlled communication path between coder threads and the monitor.
+The queue condition variable acts as the scheduler notification mechanism. A release broadcasts a queue-state change, and timed waits wake the scheduler when a dongle cooldown expires even if no other thread releases a resource at that moment.
 
 ### Coder and monitor communication
 

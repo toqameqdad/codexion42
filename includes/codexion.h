@@ -42,6 +42,7 @@ typedef struct s_dongle
 	pthread_cond_t	cond;
 	int				in_use;
 	long			last_released_ms;
+	t_heap			wait_queue;
 }	t_dongle;
 
 typedef struct s_coder
@@ -76,7 +77,6 @@ typedef struct s_simulation
 	pthread_mutex_t	stop_lock;
 	int				stop_flag;
 	int				finished_count;
-	t_heap			wait_queue;
 	pthread_mutex_t	queue_lock;
 	pthread_cond_t	queue_cond;
 	long			start_time_ms;
@@ -86,7 +86,12 @@ typedef struct s_simulation
 long	get_current_time_ms(void);
 long	elapsed_ms(t_simulation *sim);
 int		parse_args(int argc, char **argv, t_simulation *sim);
+int		is_valid_positive_number(const char *s);
+int		str_to_long(const char *s, long *result);
 int		init_simulation(t_simulation *sim);
+int		init_shared_locks(t_simulation *sim);
+int		init_queue(t_simulation *sim);
+void	cleanup_shared_data(t_simulation *sim);
 void	destroy_simulation(t_simulation *sim);
 void	cleanup_dongles(t_simulation *sim, int count);
 void	cleanup_coders(t_simulation *sim, int count);
@@ -96,13 +101,14 @@ void	simulation_request_stop(t_simulation *sim);
 void	simulation_mark_finished(t_simulation *sim);
 long	compute_priority(t_simulation *sim, t_coder *coder,
 			long request_time_ms);
-void	scheduler_wait_for_turn(t_simulation *sim, t_coder *coder,
+int		scheduler_acquire_both(t_simulation *sim, t_coder *coder,
 			long request_time_ms);
+int		scheduler_try_pair(t_simulation *sim, t_coder *coder, long *wait);
+int		scheduler_try_single(t_simulation *sim, t_coder *coder, long *wait);
+int		scheduler_reserve_ready(t_simulation *sim, t_coder *coder,
+			t_heap_node *front);
 void	ms_to_abs_timespec(long ms_from_now, struct timespec *ts);
 void	sleep_ms_interruptible(t_simulation *sim, long ms);
-int		dongle_acquire(t_simulation *sim, t_dongle *d);
-void	dongle_release(t_simulation *sim, t_dongle *d);
-int		acquire_both_dongles(t_simulation *sim, t_coder *coder);
 void	release_both_dongles(t_simulation *sim, t_coder *coder);
 long	coder_get_last_compile_start(t_coder *coder);
 void	coder_set_last_compile_start(t_coder *coder, long value);

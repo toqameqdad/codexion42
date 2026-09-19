@@ -1,43 +1,55 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   init_utils.c                                       :+:      :+:    :+:   */
+/*   parsing_utils.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: tmeqdad <toqa.meqdad@learner.42.tech>      +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2026/09/11 17:25:58 by tmeqdad           #+#    #+#             */
-/*   Updated: 2026/09/11 17:25:58 by tmeqdad          ###   ########.fr       */
+/*   Created: 2026/09/19 00:00:00 by tmeqdad           #+#    #+#             */
+/*   Updated: 2026/09/19 00:00:00 by tmeqdad          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "codexion.h"
 
-void	cleanup_dongles(t_simulation *sim, int count)
+int	is_valid_positive_number(const char *s)
 {
 	int	i;
 
 	i = 0;
-	while (i < count)
+	if (!s || !s[0])
+		return (0);
+	if (s[i] == '+')
+		i++;
+	if (!s[i])
+		return (0);
+	while (s[i])
 	{
-		heap_destroy(&sim->dongles[i].wait_queue);
-		pthread_mutex_destroy(&sim->dongles[i].lock);
-		pthread_cond_destroy(&sim->dongles[i].cond);
+		if (s[i] < '0' || s[i] > '9')
+			return (0);
 		i++;
 	}
-	free(sim->dongles);
-	sim->dongles = NULL;
+	return (1);
 }
 
-void	cleanup_coders(t_simulation *sim, int count)
+int	str_to_long(const char *s, long *result)
 {
-	int	i;
+	long	value;
+	int		i;
+	int		digit;
 
+	value = 0;
 	i = 0;
-	while (i < count)
+	if (s[i] == '+')
+		i++;
+	while (s[i])
 	{
-		pthread_mutex_destroy(&sim->coders[i].state_lock);
+		digit = s[i] - '0';
+		if (value > (LONG_MAX - digit) / 10)
+			return (1);
+		value = value * 10 + digit;
 		i++;
 	}
-	free(sim->coders);
-	sim->coders = NULL;
+	*result = value;
+	return (0);
 }
