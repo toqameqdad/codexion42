@@ -47,6 +47,12 @@ int	init_queue(t_simulation *sim)
 		pthread_mutex_destroy(&sim->queue_lock);
 		return (1);
 	}
+	if (heap_init(&sim->scheduler_queue, sim->number_of_coders) != 0)
+	{
+		pthread_cond_destroy(&sim->queue_cond);
+		pthread_mutex_destroy(&sim->queue_lock);
+		return (1);
+	}
 	return (0);
 }
 
@@ -56,6 +62,7 @@ void	destroy_simulation(t_simulation *sim)
 	cleanup_coders(sim, sim->number_of_coders);
 	pthread_mutex_destroy(&sim->print_lock);
 	pthread_mutex_destroy(&sim->stop_lock);
+	heap_destroy(&sim->scheduler_queue);
 	pthread_mutex_destroy(&sim->queue_lock);
 	pthread_cond_destroy(&sim->queue_cond);
 }

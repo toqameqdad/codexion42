@@ -15,9 +15,11 @@ SRCS		= main.c \
 			  logging.c \
 			  utils_time.c \
 			  heap.c \
+			  heap_remove.c \
 			  heap_utils.c \
 			  scheduler.c \
 			  scheduler_dongle.c \
+			  scheduler_priority.c \
 			  scheduler_wait.c \
 			  dongle.c \
 			  coder.c \

@@ -21,8 +21,8 @@ long	compute_priority(t_simulation *sim, t_coder *coder,
 		+ sim->time_to_burnout);
 }
 
-static int	push_request(t_simulation *sim, t_coder *coder,
-			t_dongle *dongle, long request_time)
+static int	queue_request(t_simulation *sim, t_coder *coder,
+			long request_time)
 {
 	long	priority;
 	long	sequence;
@@ -31,26 +31,21 @@ static int	push_request(t_simulation *sim, t_coder *coder,
 	priority = compute_priority(sim, coder, request_time);
 	if (sim->scheduler == CX_SCHED_FIFO)
 		priority = sequence;
-	return (heap_push(&dongle->wait_queue, priority,
+	return (heap_push(&sim->scheduler_queue, priority,
 			coder->id, sequence));
 }
 
-static int	acquire_one_dongle(t_simulation *sim, t_coder *coder,
-			t_dongle *dongle, long request_time)
+static int	wait_for_both(t_simulation *sim, t_coder *coder,
+			t_dongle *first, t_dongle *second)
 {
-	pthread_mutex_lock(&sim->queue_lock);
-	if (push_request(sim, coder, dongle, request_time) != 0)
-	{
-		pthread_mutex_unlock(&sim->queue_lock);
-		simulation_request_stop(sim);
-		return (1);
-	}
 	while (!simulation_should_stop(sim))
 	{
-		if (scheduler_reserve_dongle(sim, coder, dongle))
+		if (scheduler_reserve_both(sim, coder, first, second))
 		{
 			pthread_mutex_unlock(&sim->queue_lock);
 			log_event(sim, coder->id, "has taken a dongle");
+			if (first != second)
+				log_event(sim, coder->id, "has taken a dongle");
 			return (0);
 		}
 	}
@@ -80,7 +75,14 @@ int	scheduler_acquire_both(t_simulation *sim, t_coder *coder,
 	t_dongle	*second;
 
 	set_dongle_order(coder, &first, &second);
-	if (acquire_one_dongle(sim, coder, first, request_time) != 0)
+	pthread_mutex_lock(&sim->queue_lock);
+	if (queue_request(sim, coder, request_time) != 0)
+	{
+		pthread_mutex_unlock(&sim->queue_lock);
+		simulation_request_stop(sim);
+		return (1);
+	}
+	if (wait_for_both(sim, coder, first, second) != 0)
 		return (1);
 	if (first == second)
 	{
@@ -88,7 +90,5 @@ int	scheduler_acquire_both(t_simulation *sim, t_coder *coder,
 			usleep(1000);
 		return (1);
 	}
-	if (acquire_one_dongle(sim, coder, second, request_time) != 0)
-		return (1);
 	return (0);
 }

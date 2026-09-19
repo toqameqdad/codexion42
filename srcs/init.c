@@ -24,13 +24,6 @@ static int	init_one_dongle(t_simulation *sim, int i)
 		pthread_mutex_destroy(&sim->dongles[i].lock);
 		return (1);
 	}
-	if (heap_init(&sim->dongles[i].wait_queue,
-			sim->number_of_coders) != 0)
-	{
-		pthread_cond_destroy(&sim->dongles[i].cond);
-		pthread_mutex_destroy(&sim->dongles[i].lock);
-		return (1);
-	}
 	return (0);
 }
 

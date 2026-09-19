@@ -125,7 +125,7 @@ Log messages are serialized so that messages from different threads cannot overl
 
 FIFO stands for **First In, First Out**.
 
-When multiple coders are waiting for the same dongle, the request that entered the waiting queue first is served first.
+Requests are kept in a global scheduler queue. When requests conflict on a dongle, the older request is served first.
 
 This provides deterministic request ordering and prevents a continuously arriving request from simply jumping ahead of older requests.
 
@@ -141,7 +141,7 @@ deadline = last_compile_start + time_to_burnout
 
 When several coders are waiting, the coder with the earliest deadline receives priority.
 
-The implementation uses a custom priority queue based on a heap rather than a standard-library priority queue.
+The implementation uses one global custom priority queue based on a heap rather than a standard-library priority queue. Each request represents the coder's adjacent dongle pair.
 
 ## Blocking cases handled
 
@@ -149,7 +149,7 @@ The implementation uses a custom priority queue based on a heap rather than a st
 
 A deadlock can occur when several coders hold one dongle while waiting indefinitely for another dongle.
 
-The implementation avoids this situation by letting the scheduler reserve both adjacent dongles atomically. Dongle mutexes are always locked in ascending ID order, so a circular lock dependency cannot be formed.
+The implementation avoids this situation by letting the scheduler reserve both adjacent dongles atomically. A coder never keeps one dongle while waiting for the other. Dongle mutexes are locked in ascending ID order whenever a pair is updated.
 
 The four Coffman conditions are:
 
@@ -158,7 +158,7 @@ The four Coffman conditions are:
 3. No preemption
 4. Circular wait
 
-The fixed lock order breaks the circular-wait condition, while atomic pair reservation prevents a coder from keeping only one dongle while waiting for the other.
+Atomic pair reservation removes hold-and-wait, and the fixed mutex order also prevents a circular lock dependency while the pair state is updated.
 
 A coder only enters the compiling state after successfully obtaining both required dongles.
 
@@ -168,8 +168,8 @@ Starvation happens when a coder continuously waits while other coders repeatedly
 
 The scheduler explicitly orders waiting requests:
 
-* FIFO preserves request arrival order.
-* EDF prioritizes the closest burnout deadline.
+* FIFO preserves request arrival order between conflicting ready requests.
+* EDF protects the request with the closest burnout deadline from being bypassed by a conflicting later-deadline request.
 
 This prevents arbitrary resource acquisition and provides fair access to the dongles according to the selected scheduling policy.
 
@@ -261,7 +261,7 @@ lock mutex
 unlock mutex
 ```
 
-When a dongle becomes available, the corresponding condition is signaled so waiting threads can re-check their eligibility.
+When scheduler state changes, the global queue condition is broadcast so waiting threads can re-check their eligibility.
 
 The condition is always checked while holding the associated mutex. This prevents a race where a thread assumes that a resource is available based on stale information.
 
@@ -312,7 +312,7 @@ Only one thread can modify the dongle state at a time.
 
 ### Custom heap
 
-A custom heap is used to implement the priority queue required by the project.
+A custom heap is used to implement the global priority queue required by the project. One node represents one coder request for both adjacent dongles.
 
 The heap supports the scheduling policies used by the dongle manager:
 

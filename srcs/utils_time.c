@@ -14,10 +14,10 @@
 
 long	get_current_time_ms(void)
 {
-	struct timeval	tv;
+	struct timespec	ts;
 
-	gettimeofday(&tv, NULL);
-	return ((tv.tv_sec * 1000L) + (tv.tv_usec / 1000L));
+	clock_gettime(CLOCK_MONOTONIC, &ts);
+	return ((ts.tv_sec * 1000L) + (ts.tv_nsec / 1000000L));
 }
 
 long	elapsed_ms(t_simulation *sim)

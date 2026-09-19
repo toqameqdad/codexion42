@@ -31,6 +31,7 @@ int		heap_init(t_heap *heap, int capacity);
 void	heap_destroy(t_heap *heap);
 int		heap_push(t_heap *heap, long priority, int coder_id, long sequence);
 int		heap_pop(t_heap *heap, t_heap_node *out);
+int		heap_remove_coder(t_heap *heap, int coder_id, t_heap_node *out);
 int		heap_peek(t_heap *heap, t_heap_node *out);
 int		heap_is_empty(t_heap *heap);
 int		heap_node_is_less(t_heap_node a, t_heap_node b);

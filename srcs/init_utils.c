@@ -19,7 +19,6 @@ void	cleanup_dongles(t_simulation *sim, int count)
 	i = 0;
 	while (i < count)
 	{
-		heap_destroy(&sim->dongles[i].wait_queue);
 		pthread_mutex_destroy(&sim->dongles[i].lock);
 		pthread_cond_destroy(&sim->dongles[i].cond);
 		i++;

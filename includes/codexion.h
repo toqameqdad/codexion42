@@ -20,6 +20,7 @@
 # include <sys/time.h>
 # include <string.h>
 # include <limits.h>
+# include <time.h>
 # include "heap.h"
 
 typedef enum e_scheduler
@@ -42,7 +43,6 @@ typedef struct s_dongle
 	pthread_cond_t	cond;
 	int				in_use;
 	long			last_released_ms;
-	t_heap			wait_queue;
 }	t_dongle;
 
 typedef struct s_coder
@@ -79,6 +79,7 @@ typedef struct s_simulation
 	int				finished_count;
 	pthread_mutex_t	queue_lock;
 	pthread_cond_t	queue_cond;
+	t_heap			scheduler_queue;
 	long			start_time_ms;
 	pthread_t		monitor_thread;
 }	t_simulation;
@@ -105,8 +106,12 @@ int		scheduler_acquire_both(t_simulation *sim, t_coder *coder,
 			long request_time_ms);
 int		scheduler_try_dongle(t_simulation *sim, t_dongle *dongle,
 			long *wait);
-int		scheduler_reserve_dongle(t_simulation *sim, t_coder *coder,
-			t_dongle *dongle);
+int		scheduler_try_both(t_simulation *sim, t_dongle *first,
+			t_dongle *second, long *wait);
+int		scheduler_reserve_both(t_simulation *sim, t_coder *coder,
+			t_dongle *first, t_dongle *second);
+int		scheduler_request_may_run(t_simulation *sim, t_coder *coder,
+			t_heap_node own, long now);
 void	ms_to_abs_timespec(long ms_from_now, struct timespec *ts);
 void	sleep_ms_interruptible(t_simulation *sim, long ms);
 void	release_both_dongles(t_simulation *sim, t_coder *coder);
