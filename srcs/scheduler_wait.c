@@ -19,46 +19,37 @@ static void	wait_for_queue(t_simulation *sim, long wait)
 	if (wait > 0)
 	{
 		ms_to_abs_timespec(wait, &ts);
-		pthread_cond_timedwait(&sim->queue_cond, &sim->queue_lock, &ts);
+		pthread_cond_timedwait(&sim->queue_cond,
+			&sim->queue_lock, &ts);
 	}
 	else
 		pthread_cond_wait(&sim->queue_cond, &sim->queue_lock);
 }
 
-static int	request_is_first(t_coder *coder, t_heap_node *front)
+static int	request_is_first(t_dongle *dongle, int coder_id)
 {
-	t_heap_node	right_front;
+	t_heap_node	front;
 
-	if (heap_peek(&coder->left_dongle->wait_queue, front) != 0)
+	if (heap_peek(&dongle->wait_queue, &front) != 0)
 		return (0);
-	if (front->coder_id != coder->id)
-		return (0);
-	if (coder->left_dongle == coder->right_dongle)
-		return (1);
-	if (heap_peek(&coder->right_dongle->wait_queue,
-			&right_front) != 0)
-		return (0);
-	if (right_front.coder_id != coder->id)
-		return (0);
-	return (1);
+	return (front.coder_id == coder_id);
 }
 
-int	scheduler_reserve_ready(t_simulation *sim, t_coder *coder,
-			t_heap_node *front)
+int	scheduler_reserve_dongle(t_simulation *sim, t_coder *coder,
+			t_dongle *dongle)
 {
-	long	wait;
-	int		reserved;
+	t_heap_node	front;
+	long		wait;
 
 	wait = 0;
-	reserved = 0;
-	if (request_is_first(coder, front))
+	if (request_is_first(dongle, coder->id))
 	{
-		if (coder->left_dongle == coder->right_dongle)
-			reserved = scheduler_try_single(sim, coder, &wait);
-		else
-			reserved = scheduler_try_pair(sim, coder, &wait);
-		if (reserved)
+		if (scheduler_try_dongle(sim, dongle, &wait))
+		{
+			heap_pop(&dongle->wait_queue, &front);
+			pthread_cond_broadcast(&sim->queue_cond);
 			return (1);
+		}
 	}
 	wait_for_queue(sim, wait);
 	return (0);

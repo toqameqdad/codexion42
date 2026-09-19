@@ -103,10 +103,10 @@ long	compute_priority(t_simulation *sim, t_coder *coder,
 			long request_time_ms);
 int		scheduler_acquire_both(t_simulation *sim, t_coder *coder,
 			long request_time_ms);
-int		scheduler_try_pair(t_simulation *sim, t_coder *coder, long *wait);
-int		scheduler_try_single(t_simulation *sim, t_coder *coder, long *wait);
-int		scheduler_reserve_ready(t_simulation *sim, t_coder *coder,
-			t_heap_node *front);
+int		scheduler_try_dongle(t_simulation *sim, t_dongle *dongle,
+			long *wait);
+int		scheduler_reserve_dongle(t_simulation *sim, t_coder *coder,
+			t_dongle *dongle);
 void	ms_to_abs_timespec(long ms_from_now, struct timespec *ts);
 void	sleep_ms_interruptible(t_simulation *sim, long ms);
 void	release_both_dongles(t_simulation *sim, t_coder *coder);

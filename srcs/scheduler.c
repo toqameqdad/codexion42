@@ -17,66 +17,29 @@ long	compute_priority(t_simulation *sim, t_coder *coder,
 {
 	if (sim->scheduler == CX_SCHED_FIFO)
 		return (request_time_ms);
-	return (coder_get_last_compile_start(coder) + sim->time_to_burnout);
+	return (coder_get_last_compile_start(coder)
+		+ sim->time_to_burnout);
 }
 
-static int	enqueue_request(t_simulation *sim, t_coder *coder,
-			long request_time, long sequence)
+static int	push_request(t_simulation *sim, t_coder *coder,
+			t_dongle *dongle, long request_time)
 {
-	t_dongle	*left;
-	t_dongle	*right;
-	long		priority;
+	long	priority;
+	long	sequence;
 
-	left = coder->left_dongle;
-	right = coder->right_dongle;
+	sequence = sim->request_sequence++;
 	priority = compute_priority(sim, coder, request_time);
 	if (sim->scheduler == CX_SCHED_FIFO)
 		priority = sequence;
-	if (left->wait_queue.size >= left->wait_queue.capacity)
-		return (1);
-	if (right != left
-		&& right->wait_queue.size >= right->wait_queue.capacity)
-		return (1);
-	if (heap_push(&left->wait_queue, priority, coder->id, sequence) != 0)
-		return (1);
-	if (right != left
-		&& heap_push(&right->wait_queue, priority,
-			coder->id, sequence) != 0)
-		return (1);
-	return (0);
+	return (heap_push(&dongle->wait_queue, priority,
+			coder->id, sequence));
 }
 
-static int	finish_reservation(t_simulation *sim, t_coder *coder,
-			t_heap_node *front)
+static int	acquire_one_dongle(t_simulation *sim, t_coder *coder,
+			t_dongle *dongle, long request_time)
 {
-	int	single;
-
-	single = (coder->left_dongle == coder->right_dongle);
-	heap_pop(&coder->left_dongle->wait_queue, front);
-	if (!single)
-		heap_pop(&coder->right_dongle->wait_queue, front);
-	pthread_cond_broadcast(&sim->queue_cond);
-	pthread_mutex_unlock(&sim->queue_lock);
-	log_event(sim, coder->id, "has taken a dongle");
-	if (single)
-	{
-		while (!simulation_should_stop(sim))
-			usleep(1000);
-		return (1);
-	}
-	log_event(sim, coder->id, "has taken a dongle");
-	return (0);
-}
-
-int	scheduler_acquire_both(t_simulation *sim, t_coder *coder,
-			long request_time_ms)
-{
-	long		sequence;
-	t_heap_node	front;
-
 	pthread_mutex_lock(&sim->queue_lock);
-	sequence = sim->request_sequence++;
-	if (enqueue_request(sim, coder, request_time_ms, sequence) != 0)
+	if (push_request(sim, coder, dongle, request_time) != 0)
 	{
 		pthread_mutex_unlock(&sim->queue_lock);
 		simulation_request_stop(sim);
@@ -84,9 +47,48 @@ int	scheduler_acquire_both(t_simulation *sim, t_coder *coder,
 	}
 	while (!simulation_should_stop(sim))
 	{
-		if (scheduler_reserve_ready(sim, coder, &front))
-			return (finish_reservation(sim, coder, &front));
+		if (scheduler_reserve_dongle(sim, coder, dongle))
+		{
+			pthread_mutex_unlock(&sim->queue_lock);
+			log_event(sim, coder->id, "has taken a dongle");
+			return (0);
+		}
 	}
 	pthread_mutex_unlock(&sim->queue_lock);
 	return (1);
+}
+
+static void	set_dongle_order(t_coder *coder, t_dongle **first,
+			t_dongle **second)
+{
+	if (coder->left_dongle->id < coder->right_dongle->id)
+	{
+		*first = coder->left_dongle;
+		*second = coder->right_dongle;
+	}
+	else
+	{
+		*first = coder->right_dongle;
+		*second = coder->left_dongle;
+	}
+}
+
+int	scheduler_acquire_both(t_simulation *sim, t_coder *coder,
+			long request_time)
+{
+	t_dongle	*first;
+	t_dongle	*second;
+
+	set_dongle_order(coder, &first, &second);
+	if (acquire_one_dongle(sim, coder, first, request_time) != 0)
+		return (1);
+	if (first == second)
+	{
+		while (!simulation_should_stop(sim))
+			usleep(1000);
+		return (1);
+	}
+	if (acquire_one_dongle(sim, coder, second, request_time) != 0)
+		return (1);
+	return (0);
 }
