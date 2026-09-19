@@ -1,3 +1,5 @@
+the dining philosophers problem:
+https://www.youtube.com/watch?v=FYUi-u7UWgw
 what is process and threads?:
 https://www.youtube.com/watch?v=OrM7nZcxXZU
 why threads?:
@@ -8,3 +10,4 @@ https://www.youtube.com/watch?v=XH_KVNGsKpA
 tester:
 https://github.com/Manoa12/Codexion42
 https://github.com/toqameqdad/codexion42/blob/main/edge_tests.sh
+https://github.com/toqameqdad/codexion42/blob/main/codexion_strict_tester.py
