@@ -1,4 +1,4 @@
-*This activity has been created as part of the 42 curriculum by tmeqdad.*
+*This project has been created as part of the 42 curriculum by tmeqdad.*
 
 # Codexion
 

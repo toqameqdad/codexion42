@@ -36,7 +36,6 @@ static void	mark_dongles_released(t_dongle *first, t_dongle *second,
 	{
 		second->in_use = 0;
 		second->last_released_ms = released_at;
-		pthread_mutex_unlock(&second->lock);
 	}
 }
 
@@ -53,6 +52,7 @@ void	release_both_dongles(t_simulation *sim, t_coder *coder)
 		pthread_mutex_lock(&second->lock);
 	released_at = get_current_time_ms();
 	mark_dongles_released(first, second, released_at);
+	pthread_mutex_unlock(&second->lock);
 	pthread_mutex_unlock(&first->lock);
 	pthread_cond_broadcast(&sim->queue_cond);
 	pthread_mutex_unlock(&sim->queue_lock);
